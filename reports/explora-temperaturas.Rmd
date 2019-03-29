@@ -29,6 +29,7 @@ glimpse(climas)
 cgSummary = cgTemp %>% summarise(cidade="Campina Grande", media= mean(tmedia), max=max(tmax), min=min(tmin), chuva=max(chuva))
 jpSummary = jpTemp %>% summarise(cidade="João Pessoa", media= mean(tmedia), max=max(tmax), min=min(tmin), chuva=max(chuva))
 summary<-bind_rows(cgSummary, jpSummary) 
+summary
 
 ```
 
@@ -44,8 +45,11 @@ climas %>% mutate(cor = ifelse((tmax == cgSummary$max & cidade == "Campina Grand
 
 ```{r}
   ggplot() +
-  geom_line(data = cgTemp, aes(x=semana, y=tmax), color = 'black') +
-  geom_line(data = cgTemp, aes(x=semana, y=tmax), color = 'red', alpha = .6)
+  geom_boxplot(data = cgTemp, aes(x="Campina Grande: Máxima", y=tmax), fill = "#87CEFA") +
+  geom_boxplot(data = cgTemp, aes(x="Campina Grande: Média", y=tmedia), fill = '#87CEFA') +
+  geom_boxplot(data = jpTemp, aes(x="João Pessoa: Máxima", y=tmax), fill = "#FF9999") +
+  geom_boxplot(data = cgTemp, aes(x="João Pessoa: Média", y=tmedia), fill = "#FF9999")
+  
 
 ```
 
@@ -53,22 +57,26 @@ climas %>% mutate(cor = ifelse((tmax == cgSummary$max & cidade == "Campina Grand
 
 ```{r}
 extremos = climas %>% group_by(ano, mes, cidade) %>% summarize(max = max(tmax), min = min(tmin)) 
-  extremos %>% ggplot() +
-  geom_point(aes(x = mes, y = max, colour = cidade), alpha =.5, size = 3 )
+media_extremos = extremos %>% group_by(mes, cidade) %>% summarize(max = mean(max), min = mean(min)) 
+  ggplot() +
+  geom_point(data=extremos, aes(x = mes, y = max, colour = cidade), alpha =.5, size = 3 )
+  geom_line()
+  scale_x_continuous(breaks = 1:12)
   
   extremos %>% ggplot() +
-  geom_point(aes(x = mes, y = min, colour = cidade), alpha =.5, size = 3 )
+  geom_point(aes(x = mes, y = min, colour = cidade), alpha =.5, size = 3 ) +
+  scale_x_continuous(breaks = 1:12)
 
 ```
 ### Qual foi o São João  mais frio de CG que está nos nossos dados?
 
 ```{r}
 climas %>% 
-  filter(cidade == "Campina Grande", mes %in% c(6,7)) %>%
+  filter(cidade == "Campina Grande", mes == 6) %>%
   group_by(ano) %>%
   filter(tmin == min(tmin)) %>%
   ggplot() +
-  geom_point(aes(ano, tmin, colour=mes), size = 5)
+  geom_line(aes(ano, tmin), size = .7, color = '#8A2BE2')
 ```
 
 ## Chuva
@@ -86,16 +94,13 @@ Como é a distribuição do volume de chuvas por semana em JP e CG? A chuva vari
 
 ### A distribuição é diferente em meses específicos?
 ```{r}
-meses=c("jan", "fev","mar", "abril", "maio", "Jun", "jul", "ago", "set", "out", "nov", "dez")
-mesesNum=c(1:length(meses))
-library(plyr)
-mapvalues(climas$mes, from = mesesNum, to=meses)
-#http://www.cookbook-r.com/Manipulating_data/Mapping_vector_values/
+
 climas %>% 
   group_by(mes, cidade) %>%
   summarise(mean= mean(chuva)) %>%
   ggplot() +
-  geom_line(aes(mes, mean, colour=cidade), alpha = .8, )
-```
+  geom_line(aes(mes, mean, colour=cidade), alpha = .8 ) +
+  scale_x_continuous(breaks = 1:12)
 
+```
 
